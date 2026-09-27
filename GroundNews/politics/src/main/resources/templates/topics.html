@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>같은 뉴스, 다른 시선</title>
+    <meta name="description" content="같은 주제를 진보·보수 언론이 각각 어떻게 다루는지 나란히 비교합니다.">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
+    <style>
+        :root {
+            --bg: #F2F4F6;
+            --card: #FFFFFF;
+            --ink: #191F28;
+            --gray: #4E5968;
+            --gray-2: #8B95A1;
+            --line: #E5E8EB;
+            --blue: #3182F6;
+            --blue-deep: #1B64DA;
+            --blue-soft: #EDF4FF;
+            --red: #F04452;
+            --red-soft: #FFF0F1;
+            --yellow: #FFE14D;
+            --r-lg: 28px;
+            --r-md: 20px;
+            --r-sm: 14px;
+            --shadow: 0 1px 2px rgba(0, 0, 0, .04), 0 10px 30px rgba(23, 31, 42, .06);
+            --shadow-up: 0 2px 4px rgba(0, 0, 0, .04), 0 20px 48px rgba(23, 31, 42, .12);
+            --ease: cubic-bezier(.2, .8, .2, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+            'Apple SD Gothic Neo', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            letter-spacing: -0.02em;
+        }
+
+        a { color: inherit; text-decoration: none; }
+        ul { list-style: none; }
+
+        .wrap { width: 100%; max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+        /* ───────── 상단 내비 ───────── */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(242, 244, 246, .82);
+            backdrop-filter: saturate(180%) blur(12px);
+            -webkit-backdrop-filter: saturate(180%) blur(12px);
+            border-bottom: 1px solid transparent;
+            transition: border-color .2s linear, background .2s linear;
+        }
+        .nav.stuck { border-bottom-color: var(--line); background: rgba(255, 255, 255, .86); }
+        .nav-inner {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+        }
+        .brand-mark {
+            width: 26px;
+            height: 26px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, var(--blue) 0%, var(--blue) 49.5%, var(--red) 50.5%, var(--red) 100%);
+        }
+        .nav-links {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--gray);
+        }
+        .nav-links a {
+            padding: 8px 12px;
+            border-radius: 10px;
+            transition: background .15s linear, color .15s linear;
+        }
+        .nav-links a:hover { background: rgba(23, 31, 42, .05); color: var(--ink); }
+        .nav-cta {
+            background: var(--ink);
+            color: #fff !important;
+            padding: 9px 16px !important;
+            border-radius: 999px !important;
+        }
+        .nav-cta:hover { background: #333D4B !important; }
+        @media (max-width: 560px) {
+            .nav-links .hide-sm { display: none; }
+        }
+
+        /* ───────── 히어로 ───────── */
+        .hero {
+            position: relative;
+            overflow: hidden;
+            padding: 92px 0 76px;
+        }
+        .hero::before,
+        .hero::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            pointer-events: none;
+        }
+        .hero::before {
+            width: 460px; height: 460px;
+            top: -170px; left: -120px;
+            background: radial-gradient(circle, rgba(49, 130, 246, .28), transparent 70%);
+        }
+        .hero::after {
+            width: 420px; height: 420px;
+            top: 40px; right: -140px;
+            background: radial-gradient(circle, rgba(240, 68, 82, .22), transparent 70%);
+        }
+        .hero-grid {
+            position: relative;
+            display: grid;
+            grid-template-columns: 1.05fr .95fr;
+            gap: 48px;
+            align-items: center;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 7px 14px 7px 10px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--gray);
+            box-shadow: 0 2px 8px rgba(23, 31, 42, .05);
+        }
+        .badge .pip {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--blue);
+            box-shadow: 0 0 0 4px rgba(49, 130, 246, .15);
+        }
+        .hero h1 {
+            margin-top: 22px;
+            font-size: clamp(36px, 5.4vw, 60px);
+            font-weight: 800;
+            line-height: 1.18;
+            letter-spacing: -0.045em;
+        }
+        .hero h1 .mark {
+            position: relative;
+            display: inline-block;
+            z-index: 0;
+        }
+        .hero h1 .mark::after {
+            content: '';
+            position: absolute;
+            left: -4px; right: -4px; bottom: 6px;
+            height: 38%;
+            background: var(--yellow);
+            border-radius: 4px;
+            z-index: -1;
+        }
+        .hero p.lede {
+            margin-top: 20px;
+            font-size: clamp(16px, 1.9vw, 19px);
+            color: var(--gray);
+            font-weight: 500;
+            max-width: 27ch;
+        }
+        .hero-actions {
+            margin-top: 32px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 0;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            padding: 15px 24px;
+            border-radius: var(--r-sm);
+            cursor: pointer;
+            transition: transform .16s var(--ease), background .16s linear, box-shadow .16s linear;
+        }
+        .btn:active { transform: scale(.98); }
+        .btn-primary { background: var(--blue); color: #fff; box-shadow: 0 6px 18px rgba(49, 130, 246, .28); }
+        .btn-primary:hover { background: var(--blue-deep); }
+        .btn-ghost { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+        .btn-ghost:hover { background: #F7F8FA; }
+
+        /* 히어로 미리보기 카드 (사진 대신) */
+        .preview {
+            position: relative;
+            perspective: 1000px;
+        }
+        .preview-card {
+            position: relative;
+            z-index: 1;
+            background: #fff;
+            border-radius: 24px;
+            box-shadow: var(--shadow-up);
+            padding: 22px;
+            transform: rotate(-1.4deg);
+            animation: float 7s ease-in-out infinite;
+        }
+        .preview-card + .preview-card {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            transform: rotate(3deg) translateY(18px) scale(.97);
+            opacity: .55;
+            animation: none;
+        }
+        @keyframes float {
+            0%, 100% { transform: rotate(-1.4deg) translateY(0); }
+            50% { transform: rotate(-1.4deg) translateY(-10px); }
+        }
+        .pv-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--gray-2);
+            margin-bottom: 14px;
+        }
+        .pv-title { font-size: 17px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 14px; }
+        .pv-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+        .pv-row.l { background: var(--blue-soft); }
+        .pv-row.r { background: var(--red-soft); }
+        .pv-tag {
+            flex: 0 0 auto;
+            font-size: 11.5px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: #fff;
+        }
+        .pv-row.l .pv-tag { color: var(--blue); }
+        .pv-row.r .pv-tag { color: var(--red); }
+        .pv-lines { flex: 1; display: grid; gap: 6px; padding-top: 3px; }
+        .pv-lines i { display: block; height: 8px; border-radius: 4px; background: rgba(25, 31, 40, .13); }
+        .pv-lines i:last-child { width: 62%; background: rgba(25, 31, 40, .08); }
+        .pv-bar {
+            margin-top: 16px;
+            display: flex;
+            height: 8px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: var(--line);
+        }
+        .pv-bar b:first-child { width: 58%; background: var(--blue); }
+        .pv-bar b:last-child { width: 42%; background: var(--red); }
+        .pv-legend {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-2);
+        }
+
+        @media (max-width: 860px) {
+            .hero { padding: 64px 0 52px; }
+            .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+            .hero p.lede { max-width: 40ch; }
+            .preview-card { transform: none; animation: none; }
+            .preview-card + .preview-card { display: none; }
+        }
+
+        /* ───────── 지표 스트립 ───────── */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 56px;
+        }
+        .stat {
+            background: #fff;
+            border-radius: var(--r-md);
+            padding: 22px 24px;
+            box-shadow: var(--shadow);
+        }
+        .stat .k { font-size: 13px; font-weight: 600; color: var(--gray-2); }
+        .stat .v {
+            margin-top: 6px;
+            font-size: clamp(24px, 3.4vw, 32px);
+            font-weight: 800;
+            letter-spacing: -0.045em;
+        }
+        .stat .v small { font-size: 15px; font-weight: 700; color: var(--gray-2); margin-left: 2px; }
+        @media (max-width: 620px) {
+            .stats { grid-template-columns: 1fr; }
+            .stat { display: flex; align-items: baseline; justify-content: space-between; padding: 18px 20px; }
+            .stat .v { margin-top: 0; }
+        }
+
+        /* ───────── 섹션 공통 ───────── */
+        section.block { padding: 84px 0; }
+        .sec-head { margin-bottom: 32px; }
+        .sec-eyebrow {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--blue);
+            margin-bottom: 10px;
+        }
+        .sec-head h2 {
+            font-size: clamp(26px, 4vw, 40px);
+            font-weight: 800;
+            line-height: 1.25;
+            letter-spacing: -0.045em;
+        }
+        .sec-head p {
+            margin-top: 12px;
+            font-size: clamp(15px, 1.7vw, 18px);
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        /* ───────── 특징 3칸 ───────── */
+        .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .feature {
+            background: #fff;
+            border-radius: var(--r-lg);
+            padding: 30px 26px 32px;
+            box-shadow: var(--shadow);
+            transition: transform .3s var(--ease), box-shadow .3s var(--ease);
+        }
+        .feature:hover { transform: translateY(-6px); box-shadow: var(--shadow-up); }
+        .f-icon {
+            width: 56px; height: 56px;
+            border-radius: 18px;
+            margin-bottom: 20px;
+            display: grid;
+            place-items: center;
+        }
+        .f-icon.one { background: linear-gradient(145deg, #E8F1FF, #D4E5FF); }
+        .f-icon.two { background: linear-gradient(145deg, #FFEDEF, #FFDDE0); }
+        .f-icon.three { background: linear-gradient(145deg, #FFF8D9, #FFF0AE); }
+        .f-icon span { display: block; }
+        .f-icon.one span {
+            width: 22px; height: 22px; border-radius: 50%;
+            background: var(--blue);
+            box-shadow: 10px 0 0 -4px var(--red);
+        }
+        .f-icon.two span {
+            width: 24px; height: 18px;
+            background: linear-gradient(90deg, var(--blue) 0 45%, transparent 45% 55%, var(--red) 55% 100%);
+            border-radius: 4px;
+        }
+        .f-icon.three span {
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            border: 5px solid #C9A200;
+            border-right-color: transparent;
+            border-bottom-color: transparent;
+            transform: rotate(45deg);
+        }
+        .feature h3 { font-size: 19px; font-weight: 700; letter-spacing: -0.035em; }
+        .feature p { margin-top: 10px; font-size: 15px; color: var(--gray); font-weight: 500; }
+        @media (max-width: 860px) { .features { grid-template-columns: 1fr; } }
+
+        /* ───────── 주제 카드 ───────── */
+        .topics { display: grid; gap: 16px; }
+        .topic {
+            background: var(--card);
+            border-radius: var(--r-lg);
+            padding: 28px;
+            box-shadow: var(--shadow);
+            transition: transform .3s var(--ease), box-shadow .3s var(--ease);
+        }
+        .topic:hover { transform: translateY(-4px); box-shadow: var(--shadow-up); }
+        .topic-head {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        .rank {
+            flex: 0 0 auto;
+            width: 40px; height: 40px;
+            border-radius: 13px;
+            background: #F2F4F6;
+            color: var(--gray);
+            display: grid;
+            place-items: center;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+        }
+        .topic:first-child .rank { background: var(--ink); color: #fff; }
+        .topic-title {
+            font-size: clamp(19px, 2.4vw, 23px);
+            font-weight: 700;
+            line-height: 1.35;
+            letter-spacing: -0.04em;
+            flex: 1;
+        }
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .chip {
+            font-size: 12.5px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #F2F4F6;
+            color: var(--gray);
+        }
+        .chip.warn { background: #FFF7E0; color: #A67500; }
+
+        /* 보도 비중 바 */
+        .ratio { margin-bottom: 22px; }
+        .ratio-bar {
+            display: flex;
+            height: 10px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: var(--line);
+        }
+        .ratio-bar b { display: block; transition: width .6s var(--ease); }
+        .ratio-bar b.l { background: var(--blue); }
+        .ratio-bar b.r { background: var(--red); }
+        .ratio-legend {
+            margin-top: 9px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--gray-2);
+        }
+        .ratio-legend .l { color: var(--blue); }
+        .ratio-legend .r { color: var(--red); }
+
+        .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        @media (max-width: 760px) { .columns { grid-template-columns: 1fr; } }
+
+        .side { border-radius: var(--r-md); padding: 20px; }
+        .side.left { background: var(--blue-soft); }
+        .side.right { background: var(--red-soft); }
+        .side-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 14px;
+            background: #fff;
+            border-radius: 999px;
+            padding: 5px 12px;
+        }
+        .side.left .side-label { color: var(--blue); }
+        .side.right .side-label { color: var(--red); }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .dot.b { background: var(--blue); }
+        .dot.r { background: var(--red); }
+
+        .lead a {
+            font-size: 17px;
+            font-weight: 700;
+            line-height: 1.45;
+            letter-spacing: -0.035em;
+        }
+        .lead a:hover { text-decoration: underline; text-underline-offset: 3px; }
+        .source {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--gray-2);
+            margin-top: 7px;
+        }
+
+        .more-list {
+            display: none;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(23, 31, 42, .08);
+        }
+        .more-list.open { display: block; }
+        .more-list li + li { margin-top: 14px; }
+        .more-list a { font-size: 14.5px; font-weight: 600; line-height: 1.45; }
+        .more-list a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+        .toggle {
+            margin-top: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff;
+            border: 0;
+            box-shadow: inset 0 0 0 1px rgba(23, 31, 42, .08);
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: inherit;
+            color: var(--gray);
+            cursor: pointer;
+            transition: box-shadow .15s linear, color .15s linear;
+        }
+        .toggle:hover { color: var(--ink); box-shadow: inset 0 0 0 1px rgba(23, 31, 42, .2); }
+        .toggle:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+        .toggle .caret {
+            width: 0; height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 5px solid currentColor;
+            transition: transform .2s var(--ease);
+        }
+        .toggle[aria-expanded="true"] .caret { transform: rotate(180deg); }
+
+        .empty {
+            font-size: 14.5px;
+            font-weight: 500;
+            color: var(--gray-2);
+        }
+        .empty-card {
+            background: #fff;
+            border-radius: var(--r-lg);
+            padding: 56px 28px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+        .empty-card strong { display: block; font-size: 19px; font-weight: 700; letter-spacing: -0.035em; }
+        .empty-card p { margin-top: 8px; color: var(--gray-2); font-size: 15px; font-weight: 500; }
+
+        /* ───────── CTA ───────── */
+        .cta {
+            background: var(--ink);
+            color: #fff;
+            border-radius: 32px;
+            padding: clamp(40px, 6vw, 68px);
+            position: relative;
+            overflow: hidden;
+        }
+        .cta::after {
+            content: '';
+            position: absolute;
+            width: 380px; height: 380px;
+            right: -110px; bottom: -190px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(49, 130, 246, .5), transparent 65%);
+            filter: blur(20px);
+        }
+        .cta h2 {
+            position: relative;
+            font-size: clamp(26px, 4vw, 40px);
+            font-weight: 800;
+            line-height: 1.28;
+            letter-spacing: -0.045em;
+        }
+        .cta p {
+            position: relative;
+            margin-top: 14px;
+            color: #B0B8C1;
+            font-size: clamp(15px, 1.7vw, 18px);
+            font-weight: 500;
+        }
+        .cta-actions { position: relative; margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; }
+        .cta .btn-ghost { background: rgba(255, 255, 255, .1); color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22); }
+        .cta .btn-ghost:hover { background: rgba(255, 255, 255, .18); }
+
+        /* ───────── 푸터 ───────── */
+        footer {
+            padding: 44px 0 64px;
+            color: var(--gray-2);
+            font-size: 13.5px;
+            font-weight: 500;
+        }
+        footer .foot-inner { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
+        footer a:hover { color: var(--ink); }
+
+        /* ───────── 스크롤 등장 ───────── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(18px);
+            transition: opacity .6s var(--ease), transform .6s var(--ease);
+        }
+        .reveal.in { opacity: 1; transform: none; }
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            .reveal { opacity: 1; transform: none; transition: none; }
+            .preview-card { animation: none; }
+        }
+    </style>
+</head>
+<body th:with="topicCount=${topics == null ? 0 : #lists.size(topics)},
+               totalArticles=${topics == null or #lists.isEmpty(topics) ? 0
+                    : #aggregates.sum(topics.![liberalArticles.size() + conservArticles.size()])}">
+
+<!-- 상단 내비 -->
+<nav class="nav" id="top">
+    <div class="wrap nav-inner">
+        <a class="brand" href="/topics">
+            <span class="brand-mark" aria-hidden="true"></span>
+            다른시선
+        </a>
+        <div class="nav-links">
+            <a class="hide-sm" href="#topics">오늘의 주제</a>
+            <a class="hide-sm" href="/feed?category=liberal">진보 피드</a>
+            <a class="hide-sm" href="/feed?category=conservative">보수 피드</a>
+            <a class="nav-cta" href="#topics">비교 시작하기</a>
+        </div>
+    </div>
+</nav>
+
+<!-- 히어로 -->
+<header class="hero">
+    <div class="wrap">
+        <div class="hero-grid">
+            <div>
+                <span class="badge"><i class="pip" aria-hidden="true"></i>AI가 오늘의 정치 기사를 주제별로 묶었어요</span>
+                <h1>같은 뉴스를<br><span class="mark">다른 시선</span>으로<br>나란히 봅니다</h1>
+                <p class="lede">하나의 사건, 두 개의 헤드라인. 진보와 보수 언론이 같은 주제를 어떻게 다루는지 한 화면에서 비교하세요.</p>
+                <div class="hero-actions">
+                    <a class="btn btn-primary" href="#topics">오늘의 주제 보기</a>
+                    <a class="btn btn-ghost" href="/feed?category=liberal">전체 기사 피드</a>
+                </div>
+            </div>
+
+            <!-- 사진 대신 화면 미리보기 -->
+            <div class="preview" aria-hidden="true">
+                <div class="preview-card">
+                    <div class="pv-top"><span>TODAY</span><span>진보 · 보수</span></div>
+                    <div class="pv-title">같은 사건, 두 개의 헤드라인</div>
+                    <div class="pv-row l">
+                        <span class="pv-tag">진보</span>
+                        <span class="pv-lines"><i></i><i></i></span>
+                    </div>
+                    <div class="pv-row r">
+                        <span class="pv-tag">보수</span>
+                        <span class="pv-lines"><i></i><i></i></span>
+                    </div>
+                    <div class="pv-bar"><b></b><b></b></div>
+                    <div class="pv-legend"><span>진보 58%</span><span>보수 42%</span></div>
+                </div>
+                <div class="preview-card"></div>
+            </div>
+        </div>
+
+        <!-- 지표 -->
+        <div class="stats">
+            <div class="stat">
+                <div class="k">오늘 묶인 주제</div>
+                <div class="v"><span th:text="${topicCount}">0</span><small>개</small></div>
+            </div>
+            <div class="stat">
+                <div class="k">비교 중인 기사</div>
+                <div class="v"><span th:text="${totalArticles}">0</span><small>건</small></div>
+            </div>
+            <div class="stat">
+                <div class="k">갱신 주기</div>
+                <div class="v">20<small>분</small></div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- 특징 -->
+<section class="block">
+    <div class="wrap">
+        <div class="sec-head reveal">
+            <div class="sec-eyebrow">어떻게 보여주나요</div>
+            <h2>편집 없이, 양쪽을<br>그대로 나란히</h2>
+            <p>기사를 고르거나 요약하지 않습니다. 같은 주제에 붙은 양쪽 기사를 그대로 보여줍니다.</p>
+        </div>
+        <div class="features">
+            <div class="feature reveal">
+                <div class="f-icon one" aria-hidden="true"><span></span></div>
+                <h3>주제 자동 묶기</h3>
+                <p>서로 다른 언론사가 쓴 같은 사건의 기사를 AI가 하나의 주제로 모읍니다.</p>
+            </div>
+            <div class="feature reveal">
+                <div class="f-icon two" aria-hidden="true"><span></span></div>
+                <h3>좌우 나란히 비교</h3>
+                <p>진보와 보수를 한 화면 좌우에 배치해, 제목과 프레임의 차이가 바로 보입니다.</p>
+            </div>
+            <div class="feature reveal">
+                <div class="f-icon three" aria-hidden="true"><span></span></div>
+                <h3>보도 비중과 사각지대</h3>
+                <p>어느 쪽이 더 많이 다뤘는지, 한쪽만 보도한 주제인지 표시합니다.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 주제 목록 -->
+<section class="block" id="topics" style="padding-top: 0;">
+    <div class="wrap">
+        <div class="sec-head reveal">
+            <div class="sec-eyebrow">TODAY</div>
+            <h2>오늘의 주제</h2>
+            <p th:text="|기사가 많이 묶인 주제부터 보여드려요 · 총 ${topicCount}개 주제|">기사가 많이 묶인 주제부터 보여드려요</p>
+        </div>
+
+        <!-- 오류 안내 -->
+        <div class="empty-card reveal" th:if="${error}">
+            <strong th:text="${error}">주제를 불러오지 못했습니다.</strong>
+            <p>잠시 후 새로고침하면 다시 시도합니다.</p>
+        </div>
+
+        <!-- 주제가 없을 때 -->
+        <div class="empty-card reveal" th:if="${error == null and topicCount == 0}">
+            <strong>아직 묶인 주제가 없어요</strong>
+            <p>새 기사가 들어오면 주제별로 묶어 보여드립니다.</p>
+        </div>
+
+        <div class="topics">
+            <article class="topic reveal" th:each="topic, ts : ${topics}"
+                     th:with="libN=${#lists.size(topic.liberalArticles)},
+                              conN=${#lists.size(topic.conservArticles)},
+                              totalN=${libN + conN},
+                              libPct=${totalN == 0 ? 50 : (libN * 100 / totalN)}">
+                <div class="topic-head">
+                    <div class="rank" th:text="${ts.count}">1</div>
+                    <div style="flex:1">
+                        <h2 class="topic-title" th:text="${topic.topicName}">주제</h2>
+                        <div class="chips">
+                            <span class="chip" th:text="|기사 ${totalN}건|">기사 0건</span>
+                            <span class="chip warn" th:if="${libN == 0 or conN == 0}">한쪽 시선만</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 보도 비중 -->
+                <div class="ratio">
+                    <div class="ratio-bar">
+                        <b class="l" th:style="|width:${libPct}%|"></b>
+                        <b class="r" th:style="|width:${100 - libPct}%|"></b>
+                    </div>
+                    <div class="ratio-legend">
+                        <span class="l" th:text="|진보 ${libN}건 · ${libPct}%|">진보 0건</span>
+                        <span class="r" th:text="|보수 ${conN}건 · ${100 - libPct}%|">보수 0건</span>
+                    </div>
+                </div>
+
+                <div class="columns">
+                    <!-- 진보 -->
+                    <div class="side left">
+                        <div class="side-label"><i class="dot b" aria-hidden="true"></i>진보</div>
+                        <th:block th:if="${libN > 0}">
+                            <div class="lead">
+                                <a th:href="${topic.liberalArticles[0].link}" th:text="${topic.liberalArticles[0].title}"
+                                   target="_blank" rel="noopener"></a>
+                                <p class="source" th:text="${topic.liberalArticles[0].sourceName}"></p>
+                            </div>
+                            <th:block th:if="${libN > 1}">
+                                <ul class="more-list">
+                                    <li th:each="a, st : ${topic.liberalArticles}" th:unless="${st.first}">
+                                        <a th:href="${a.link}" th:text="${a.title}" target="_blank" rel="noopener"></a>
+                                        <p class="source" th:text="${a.sourceName}"></p>
+                                    </li>
+                                </ul>
+                                <button class="toggle" type="button" aria-expanded="false">
+                                    <span class="label" th:text="|기사 ${libN - 1}건 더 보기|"></span>
+                                    <i class="caret" aria-hidden="true"></i>
+                                </button>
+                            </th:block>
+                        </th:block>
+                        <p class="empty" th:if="${libN == 0}">이 주제를 다룬 진보 언론 기사가 없습니다.</p>
+                    </div>
+
+                    <!-- 보수 -->
+                    <div class="side right">
+                        <div class="side-label"><i class="dot r" aria-hidden="true"></i>보수</div>
+                        <th:block th:if="${conN > 0}">
+                            <div class="lead">
+                                <a th:href="${topic.conservArticles[0].link}" th:text="${topic.conservArticles[0].title}"
+                                   target="_blank" rel="noopener"></a>
+                                <p class="source" th:text="${topic.conservArticles[0].sourceName}"></p>
+                            </div>
+                            <th:block th:if="${conN > 1}">
+                                <ul class="more-list">
+                                    <li th:each="a, st : ${topic.conservArticles}" th:unless="${st.first}">
+                                        <a th:href="${a.link}" th:text="${a.title}" target="_blank" rel="noopener"></a>
+                                        <p class="source" th:text="${a.sourceName}"></p>
+                                    </li>
+                                </ul>
+                                <button class="toggle" type="button" aria-expanded="false">
+                                    <span class="label" th:text="|기사 ${conN - 1}건 더 보기|"></span>
+                                    <i class="caret" aria-hidden="true"></i>
+                                </button>
+                            </th:block>
+                        </th:block>
+                        <p class="empty" th:if="${conN == 0}">이 주제를 다룬 보수 언론 기사가 없습니다.</p>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="block" style="padding-top: 0;">
+    <div class="wrap">
+        <div class="cta reveal">
+            <h2>한쪽만 보고 있었다면,<br>지금 반대편도 함께</h2>
+            <p>언론사별 전체 기사 피드도 그대로 열어볼 수 있습니다.</p>
+            <div class="cta-actions">
+                <a class="btn btn-primary" href="/feed?category=liberal">진보 언론 피드</a>
+                <a class="btn btn-ghost" href="/feed?category=conservative">보수 언론 피드</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="wrap foot-inner">
+        <span>© 2026 다른시선</span>
+        <span>기사 원문의 저작권은 각 언론사에 있습니다.</span>
+        <a href="#top" style="margin-left:auto">맨 위로 ↑</a>
+    </div>
+</footer>
+
+<script>
+    // 더 보기 토글
+    document.querySelectorAll('.toggle').forEach(function (btn) {
+        var label = btn.querySelector('.label');
+        var original = label.textContent;
+        btn.addEventListener('click', function () {
+            var list = btn.closest('.side').querySelector('.more-list');
+            var open = list.classList.toggle('open');
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            label.textContent = open ? '접기' : original;
+        });
+    });
+
+    // 내비 그림자
+    var nav = document.querySelector('.nav');
+    var onScroll = function () { nav.classList.toggle('stuck', window.scrollY > 8); };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    // 스크롤 등장
+    var targets = document.querySelectorAll('.reveal');
+    if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (e) {
+                if (e.isIntersecting) {
+                    e.target.classList.add('in');
+                    io.unobserve(e.target);
+                }
+            });
+        }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+        targets.forEach(function (el, i) {
+            el.style.transitionDelay = (Math.min(i, 3) * 60) + 'ms';
+            io.observe(el);
+        });
+    } else {
+        targets.forEach(function (el) { el.classList.add('in'); });
+    }
+</script>
+</body>
+</html>

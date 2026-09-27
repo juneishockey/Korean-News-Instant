@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-PoliticsApplication<politics>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/GroundNews/politics",
+            "mainClass": "com.koreanews.politics.PoliticsApplication",
+            "projectName": "politics",
+            "args": "",
+            "envFile": "${workspaceFolder}/GroundNews/politics/.env"
+        }
+    ]
+}

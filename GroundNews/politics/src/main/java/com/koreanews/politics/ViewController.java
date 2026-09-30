@@ -11,6 +11,9 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.ui.Model;
 
 
+/**
+ * 화면용 컨트롤러 담당. HTML 로 보여준다, 사람이 쓰는 화면에 보여준다
+ */
 @Controller 
 public class ViewController {
     private final TopicService topicService;
@@ -29,6 +32,7 @@ public class ViewController {
         return "redirect:/feed?category=liberal";
     }
 
+    // 주제로 들어오면
     @GetMapping("/topics")
     public String showTopics(Model model) {
         try {
@@ -41,13 +45,13 @@ public class ViewController {
         return "topics";
     }
 
+    // 피드로 들어오면
     @GetMapping("/feed")
     public String showFeed(@RequestParam String category, Model model) {
         List<NewsSource> sources = configrss.getMapOfMedia().get(category);
         if (sources == null){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "unknown category: " + category);
         }
-
 
         List<Article> allArticles = new ArrayList<>();
 

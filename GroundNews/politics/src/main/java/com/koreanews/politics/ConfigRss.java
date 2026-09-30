@@ -2,6 +2,11 @@ package com.koreanews.politics;
 
 import java.util.*;
 
+/**
+ * 언론사 명단을 제공하는 클래스.
+ * 실제 RSS 링크와 liberal/conservative 별 하드코딩된 명단이 있다.
+ */
+
 public class ConfigRss{
     private Map<String, List<NewsSource>> mapOfMedia = new HashMap<>();
     private List<NewsSource> liberal = new ArrayList<>();

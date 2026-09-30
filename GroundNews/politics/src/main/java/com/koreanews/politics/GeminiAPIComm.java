@@ -1,5 +1,5 @@
 package com.koreanews.politics;
-
+// Get API 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -11,9 +11,15 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+/**
+ * 입력: prompt 문자열, 출력: Gemini 응답본문 JSON
+ * 외부와 통신하는 역할:
+ */
+
 @Service
 public class GeminiAPIComm {
 
+    // Spring 이 설정값을 application properties 에서 가져와 이 자리에 넣어준다. 
     @Value("${gemini.api.key}")
     private String apiKey;
 
@@ -48,8 +54,7 @@ public class GeminiAPIComm {
 
         // Step 3: HttpRequest 만들기 — API 키는 x-goog-api-key 헤더로
         String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent";
-
-
+        // 요청 틀 만들기:
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(url))
             .header("content-type", "application/json")

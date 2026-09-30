@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 프로젝트 루트의 .env 파일을 읽어 Spring 환경에 추가한다.
+ * 프로젝트 루트의 .env 파일을 읽는다.
  * 실제 OS 환경변수가 우선하도록 맨 뒤(addLast)에 등록하므로,
  * 배포 환경에서는 .env 없이 환경변수만으로도 동작한다.
  */
